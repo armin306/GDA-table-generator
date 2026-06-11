@@ -5,6 +5,7 @@ from PyQt6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QGroupBox,
     QTableWidget, QTableWidgetItem, QPushButton,
     QLabel, QHeaderView, QMessageBox, QAbstractItemView,
+    QSizePolicy,
 )
 from PyQt6.QtCore import pyqtSignal, Qt
 from PyQt6.QtGui import QColor
@@ -37,13 +38,17 @@ class OrientationsPanel(QWidget):
         self._update_epics_label()
         vl.addWidget(self._epics_label)
 
-        # Table
+        # Table — sized to its content so the outer scroll area handles scrolling
         self.table = QTableWidget(0, len(_COLUMNS))
         self.table.setHorizontalHeaderLabels(_HEADERS)
         self.table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
         self.table.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
         self.table.setAlternatingRowColors(True)
+        self.table.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        self.table.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
         self.table.itemChanged.connect(lambda _: self.changed.emit())
+        self.table.model().rowsInserted.connect(self._update_table_height)
+        self.table.model().rowsRemoved.connect(self._update_table_height)
         vl.addWidget(self.table)
 
         # Buttons
@@ -72,8 +77,13 @@ class OrientationsPanel(QWidget):
         self.btn_up.clicked.connect(self._move_up)
         self.btn_down.clicked.connect(self._move_down)
 
-        # Start with one default row
-        self._add_row(Orientation())
+
+    # ---- Table height ----
+
+    def _update_table_height(self) -> None:
+        header_h = self.table.horizontalHeader().height()
+        rows_h = sum(self.table.rowHeight(r) for r in range(self.table.rowCount()))
+        self.table.setFixedHeight(header_h + rows_h + 2)
 
     # ---- EPICS status label ----
 
