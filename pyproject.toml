@@ -1,0 +1,18 @@
+[project]
+name = "gda-table-generator"
+version = "0.1.0"
+requires-python = ">=3.9"
+dependencies = [
+  "PyQt6<6.10",
+  "PyQt6-Qt6<6.10",
+  "PyQt6-sip<14",
+]
+
+[project.optional-dependencies]
+epics = ["cothread"]
+
+[project.scripts]
+gda-table-gen = "gda_table_gen.app:main"
+
+[tool.uv]
+package = true
